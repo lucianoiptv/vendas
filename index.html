@@ -53,26 +53,42 @@
             document.getElementById('total').value = total.toFixed(2);
         }
 
-        function gerarArquivo(event) {
+        async function gerarArquivo(event) {
             event.preventDefault(); // Impede o envio do formulário
+
             var vendedor = document.getElementById('vendedor').value;
             var local = document.getElementById('local').value;
             var data = document.getElementById('data').value;
             var valor = document.getElementById('valor').value;
             var quantidade = document.getElementById('quantidade').value;
             var formaPagamento = document.getElementById('forma-pagamento').value;
+            var dataFiado = document.getElementById('data-fiado').value;
             var observacao = document.getElementById('observacao').value;
             var total = document.getElementById('total').value;
 
-            var conteudo = `Vendedor: ${vendedor}\nLocal: ${local}\nData: ${data}\nValor: R$ ${valor}\nQuantidade: ${quantidade}\nForma de Pagamento: ${formaPagamento}\nObservação: ${observacao}\nTotal: R$ ${total}`;
-
+            var conteudo = `Vendedor: ${vendedor}\nLocal: ${local}\nData: ${data}\nValor: R$ ${valor}\nQuantidade: ${quantidade}\nForma de Pagamento: ${formaPagamento}\nData p/ receber se Fiado: ${dataFiado}\nObservação: ${observacao}\nTotal: R$ ${total}`;
+            
             var blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
             var url = URL.createObjectURL(blob);
-            var link = document.createElement('a');
-            link.href = url;
-            link.download = 'controle_vendas.txt';
-            link.click();
-            URL.revokeObjectURL(url);
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Controle de Vendas',
+                        text: conteudo,
+                        files: [new File([blob], `vendas_${vendedor}.txt`, { type: 'text/plain' })],
+                    });
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error('Erro ao compartilhar', error);
+                }
+            } else {
+                var link = document.createElement('a');
+                link.href = url;
+                link.download = `vendas_${vendedor}.txt`;
+                link.click();
+                URL.revokeObjectURL(url);
+            }
         }
     </script>
 </head>
@@ -83,9 +99,10 @@
             <label for="vendedor">Vendedor:</label>
             <select id="vendedor" name="vendedor" required>
                 <option value="">Selecione um vendedor</option>
-                <option value="vendedor1">Vendedor 1</option>
-                <option value="vendedor2">Vendedor 2</option>
-                <option value="vendedor3">Vendedor 3</option>
+                <option value="Rodrigo">Rodrigo</option>
+                <option value="Gol">Gol</option>
+                <option value="Rafael">Rafael</option>
+                <option value="Luciano">Luciano</option>
             </select>
         </div>
         <div class="form-group">
@@ -114,6 +131,10 @@
                 <option value="credito">Crédito</option>
                 <option value="fiado">Fiado</option>
             </select>
+        </div>
+        <div class="form-group">
+            <label for="data-fiado">Data p/ receber se Fiado:</label>
+            <input type="date" id="data-fiado" name="data-fiado">
         </div>
         <div class="form-group">
             <label for="observacao">Observação:</label>
