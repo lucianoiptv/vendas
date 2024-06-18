@@ -53,7 +53,7 @@
             document.getElementById('total').value = total.toFixed(2);
         }
 
-        async function gerarArquivo(event) {
+        function gerarArquivo(event) {
             event.preventDefault(); // Impede o envio do formulário
 
             var vendedor = document.getElementById('vendedor').value;
@@ -67,29 +67,14 @@
             var total = document.getElementById('total').value;
 
             var conteudo = `Vendedor: ${vendedor}\nLocal: ${local}\nData: ${data}\nValor: R$ ${valor}\nQuantidade: ${quantidade}\nForma de Pagamento: ${formaPagamento}\nData p/ receber se Fiado: ${dataFiado}\nObservação: ${observacao}\nTotal: R$ ${total}`;
-            
-            var blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
-            var file = new File([blob], `vendas_${vendedor}.txt`, { type: 'text/plain' });
-            var filesArray = [file];
 
-            if (navigator.share && navigator.canShare({ files: filesArray })) {
-                try {
-                    await navigator.share({
-                        title: 'Controle de Vendas',
-                        text: conteudo,
-                        files: filesArray,
-                    });
-                } catch (error) {
-                    console.error('Erro ao compartilhar', error);
-                }
-            } else {
-                var url = URL.createObjectURL(blob);
-                var link = document.createElement('a');
-                link.href = url;
-                link.download = `vendas_${vendedor}.txt`;
-                link.click();
-                URL.revokeObjectURL(url);
-            }
+            var blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = `vendas_${vendedor}.txt`;
+            link.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </head>
