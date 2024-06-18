@@ -40,12 +40,15 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            margin-top: 10px;
         }
         button:hover {
             background-color: #45a049;
         }
     </style>
     <script>
+        var vendas = []; // Array para armazenar as vendas
+
         function calcularTotal() {
             var valor = parseFloat(document.getElementById('valor').value) || 0;
             var quantidade = parseInt(document.getElementById('quantidade').value) || 0;
@@ -66,13 +69,60 @@
             var observacao = document.getElementById('observacao').value;
             var total = document.getElementById('total').value;
 
-            var conteudo = `Vendedor: ${vendedor}\nLocal: ${local}\nData: ${data}\nValor: R$ ${valor}\nQuantidade: ${quantidade}\nForma de Pagamento: ${formaPagamento}\nData p/ receber se Fiado: ${dataFiado}\nObservação: ${observacao}\nTotal: R$ ${total}`;
+            var venda = {
+                vendedor: vendedor,
+                local: local,
+                data: data,
+                valor: parseFloat(valor),
+                quantidade: parseInt(quantidade),
+                formaPagamento: formaPagamento,
+                dataFiado: dataFiado,
+                observacao: observacao,
+                total: parseFloat(total)
+            };
 
-            var blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+            vendas.push(venda); // Adiciona a venda ao array de vendas
+
+            // Limpa o formulário após a submissão
+            document.getElementById('form-vendas').reset();
+            document.getElementById('total').value = '';
+
+            alert('Venda registrada com sucesso!');
+        }
+
+        function gerarRelatorio() {
+            var relatorio = {};
+
+            // Agrupa as vendas por data e vendedor
+            vendas.forEach(function(venda) {
+                if (!relatorio[venda.data]) {
+                    relatorio[venda.data] = {};
+                }
+                if (!relatorio[venda.data][venda.vendedor]) {
+                    relatorio[venda.data][venda.vendedor] = [];
+                }
+                relatorio[venda.data][venda.vendedor].push(venda);
+            });
+
+            // Formata e exibe o relatório
+            var relatorioFormatado = 'Relatório de Vendas:\n\n';
+            for (var data in relatorio) {
+                relatorioFormatado += `Data: ${data}\n`;
+                for (var vendedor in relatorio[data]) {
+                    relatorioFormatado += `  Vendedor: ${vendedor}\n`;
+                    relatorio[data][vendedor].forEach(function(venda) {
+                        relatorioFormatado += `    Local: ${venda.local}, Valor: R$ ${venda.valor.toFixed(2)}, Quantidade: ${venda.quantidade}, Forma de Pagamento: ${venda.formaPagamento}\n`;
+                    });
+                }
+                relatorioFormatado += '\n';
+            }
+
+            // Cria o arquivo de texto para download
+            var blob = new Blob([relatorioFormatado], { type: 'text/plain;charset=utf-8' });
             var url = URL.createObjectURL(blob);
             var link = document.createElement('a');
             link.href = url;
-            link.download = `vendas_${vendedor}.txt`;
+            link.download = 'relatorio_vendas.txt';
             link.click();
             URL.revokeObjectURL(url);
         }
@@ -80,7 +130,7 @@
 </head>
 <body>
     <h1>Controle de Vendas</h1>
-    <form onsubmit="gerarArquivo(event)">
+    <form id="form-vendas" onsubmit="gerarArquivo(event)">
         <div class="form-group">
             <label for="vendedor">Vendedor:</label>
             <select id="vendedor" name="vendedor" required>
@@ -131,8 +181,10 @@
             <input type="text" id="total" name="total" class="total" readonly>
         </div>
         <div class="form-group">
-            <button type="submit">Enviar</button>
+            <button type="submit">Registrar Venda</button>
         </div>
     </form>
+    
+    <button onclick="gerarRelatorio()">Gerar Relatório</button>
 </body>
 </html>
