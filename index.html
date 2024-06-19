@@ -47,8 +47,6 @@
         }
     </style>
     <script>
-        var vendas = {}; // Objeto para armazenar as vendas por data
-
         function calcularTotal() {
             var valor = parseFloat(document.getElementById('valor').value) || 0;
             var quantidade = parseInt(document.getElementById('quantidade').value) || 0;
@@ -56,8 +54,8 @@
             document.getElementById('total').value = total.toFixed(2);
         }
 
-        function gerarArquivo(event) {
-            event.preventDefault(); // Impede o envio do formulário
+        async function enviarFormulario(event) {
+            event.preventDefault();
 
             var vendedor = document.getElementById('vendedor').value;
             var local = document.getElementById('local').value;
@@ -72,62 +70,36 @@
             var venda = {
                 vendedor: vendedor,
                 local: local,
-                valor: parseFloat(valor),
-                quantidade: parseInt(quantidade),
+                data: data,
+                valor: valor,
+                quantidade: quantidade,
                 formaPagamento: formaPagamento,
                 dataFiado: dataFiado,
                 observacao: observacao,
-                total: parseFloat(total)
+                total: total
             };
 
-            // Verifica se já existe vendas registradas para essa data
-            if (!vendas[data]) {
-                vendas[data] = [];
-            }
-
-            // Adiciona a venda ao array de vendas para essa data
-            vendas[data].push(venda);
-
-            // Limpa o formulário após a submissão
-            document.getElementById('form-vendas').reset();
-            document.getElementById('total').value = '';
-
-            // Salva as vendas em arquivo
-            salvarVendasEmArquivo(data);
-
-            alert('Venda registrada com sucesso!');
-        }
-
-        function salvarVendasEmArquivo(data) {
-            var vendasDoDia = vendas[data];
-            var conteudo = '';
-
-            vendasDoDia.forEach(function(venda) {
-                conteudo += `Vendedor: ${venda.vendedor}\n`;
-                conteudo += `Local: ${venda.local}\n`;
-                conteudo += `Valor: R$ ${venda.valor.toFixed(2)}\n`;
-                conteudo += `Quantidade: ${venda.quantidade}\n`;
-                conteudo += `Forma de Pagamento: ${venda.formaPagamento}\n`;
-                if (venda.formaPagamento === 'fiado') {
-                    conteudo += `Data p/ receber se Fiado: ${venda.dataFiado}\n`;
-                }
-                conteudo += `Observação: ${venda.observacao}\n`;
-                conteudo += `Total: R$ ${venda.total.toFixed(2)}\n\n`;
+            var response = await fetch('/registrar-venda', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(venda)
             });
 
-            var blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
-            var url = URL.createObjectURL(blob);
-            var link = document.createElement('a');
-            link.href = url;
-            link.download = `vendas_${data}.txt`;
-            link.click();
-            URL.revokeObjectURL(url);
+            if (response.ok) {
+                alert('Venda registrada com sucesso!');
+                document.getElementById('form-vendas').reset();
+                document.getElementById('total').value = '';
+            } else {
+                alert('Ocorreu um erro ao registrar a venda.');
+            }
         }
     </script>
 </head>
 <body>
     <h1>Controle de Vendas</h1>
-    <form id="form-vendas" onsubmit="gerarArquivo(event)">
+    <form id="form-vendas" onsubmit="enviarFormulario(event)">
         <div class="form-group">
             <label for="vendedor">Vendedor:</label>
             <select id="vendedor" name="vendedor" required>
